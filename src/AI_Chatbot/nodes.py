@@ -1,7 +1,7 @@
 # AI_Chatbot/nodes.py
 import os
-from langchain.chat_models import ChatOpenAI
 from .schemas import Slots   # import your Pydantic model
+from langchain_community.chat_models import ChatOpenAI
 
 llm = ChatOpenAI(
     azure_endpoint        = "https://<workspace-endpoint>.openai.azure.com/",
