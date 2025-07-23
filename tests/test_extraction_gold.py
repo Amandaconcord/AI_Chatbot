@@ -8,4 +8,3 @@ def test_extract(row):
     state = {"user_input": row["text"], "slots": {}}
     out   = extract_node(state)
     assert out["slots"] == row["slots"]      # simple equality check
-SS
