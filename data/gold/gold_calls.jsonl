@@ -1,14 +1,2 @@
-{"text": "My name is Jane Doe, I was born on 1990-04-23. SSN last four 1234. Email jane.doe@gmail.com.",
- "slots": {
-   "full_name": "Jane Doe",
-   "dob": "1990-04-23",
-   "ssn_last4": "1234",
-   "email": "jane.doe@gmail.com"
- }}
-{"text": "Sure, it's John Q. Public, DOB 1978-11-09, SSN ending 9876, email john.public@example.com.",
- "slots": {
-   "full_name": "John Q. Public",
-   "dob": "1978-11-09",
-   "ssn_last4": "9876",
-   "email": "john.public@example.com"
- }}
+{"text": "My name is Jane Doe, I was born on 1990-04-23. SSN last four 1234. Email jane.doe@gmail.com.", "slots": {"full_name": "Jane Doe", "dob": "1990-04-23", "ssn_last4": "1234", "email": "jane.doe@gmail.com"}}
+{"text": "Sure, it's John Q. Public, DOB 1978-11-09, SSN ending 9876, email john.public@example.com.", "slots": {"full_name": "John Q. Public", "dob": "1978-11-09", "ssn_last4": "9876", "email": "john.public@example.com"}}
