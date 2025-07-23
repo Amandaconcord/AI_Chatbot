@@ -1,4 +1,4 @@
 pytest
-langchain==0.2.0          # or the version you use
-langchain-openai==0.1.6   # pulls in openai, tiktoken
-pydantic                  # already transitively required but explicit is fine
+langchain==0.2.0
+openai            # direct OpenAI client
+pydantic
