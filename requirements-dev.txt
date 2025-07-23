@@ -1,7 +1,6 @@
-# requirements-dev.txt
 pytest
-langchain==0.1.17
-langchain-openai==0.1.6
+langchain==0.2.0
+langchain-community==0.2.0
+langchain-openai==0.0.8   # provider package that has bind_tools()
 openai
-pydantic[email]
 email-validator==2.1.1
