@@ -1,4 +1,4 @@
-name: CI
+name: ci
 
 on:
   push:
@@ -7,30 +7,72 @@ on:
     branches: [ main ]
 
 jobs:
-  test-build:
+  test-and-build:
     runs-on: ubuntu-latest
+    permissions:              # 👈 required for OIDC
+      id-token: write
+      contents: read
+
+    env:
+      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
+    # ── Python unit tests ─────────────────────────────────────
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+    - name: Install deps & run pytest
+      run: |
+        pip install -r requirements-dev.txt
+        pytest -q
 
-      - name: Run unit tests
-        run: pytest -q
+    # ── Docker build (local only) ─────────────────────────────
+    - name: Build Docker image
+      run: docker build -t loanbot:${{ github.sha }} .
 
-      - name: Build Docker image
-        run: docker build -t loanbot:${{ github.sha }} .
+    # ── (Optional) push image to ACR ──────────────────────────
+    - name: Azure login (OIDC)
+      if: ${{ env.ACR_NAME != '' }}
+      uses: azure/login@v2
+      with:
+        tenant-id:        ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id:  ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id:        ${{ secrets.AZURE_CLIENT_ID }}
 
-      # OPTIONAL – push to GHCR (needs write-packages permission + PAT in secrets)
-      # - name: Log in to GHCR
-      #   run: echo "${{ secrets.GHCR_PAT }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-      # - name: Push image
-      #   run: docker tag loanbot:${{ github.sha }} ghcr.io/${{ github.repository }}:latest && \
-      #        docker push ghcr.io/${{ github.repository }}:latest
+    - name: Push image to ACR
+      if: ${{ env.ACR_NAME != '' }}
+      run: |
+        az acr login --name ${{ env.ACR_NAME }}
+        docker tag loanbot:${{ github.sha }} ${{ env.ACR_NAME }}.azurecr.io/loanbot:${{ github.sha }}
+        docker push ${{ env.ACR_NAME }}.azurecr.io/loanbot:${{ github.sha }}
+
+  # ── (Optional) run pytest **inside** AML env instead of locally ─────────
+  aml-test:
+    if: ${{ false }}        # flip to true when you want AML runs
+    needs: test-and-build
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+    - uses: actions/checkout@v4
+    - uses: azure/login@v2
+      with:
+        tenant-id:        ${{ secrets.AZURE_TENANT_ID }}
+        subscription-id:  ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        client-id:        ${{ secrets.AZURE_CLIENT_ID }}
+
+    - name: Install AML CLI
+      run: az extension add -n ml -y
+
+    - name: Submit pytest job to AML
+      run: |
+        az ml job create \
+          --file .azureml/test_job.yml \
+          --resource-group ${{ secrets.AZURE_RESOURCE_GROUP }} \
+          --workspace-name ${{ secrets.AZURE_WORKSPACE }} \
+          --set name=loanbot-smoke-${{ github.run_number }}
