@@ -1,5 +1,7 @@
-pytest
-langchain==0.1.17
-langchain-openai==0.0.5
+langchain==0.2.1
+langchain_core==0.2.1
+langchain_openai==0.1.7
+langchain_community==0.2.1
+pydantic[email]
 openai
-email-validator==2.1.1
+pytest
