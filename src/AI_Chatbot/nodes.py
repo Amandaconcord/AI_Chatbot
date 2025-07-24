@@ -4,8 +4,7 @@ from .schemas import Slots   # import your Pydantic model
 from langchain_openai import ChatOpenAI
 
 llm = ChatOpenAI(
-    azure_endpoint        = "https://<workspace-endpoint>.openai.azure.com/",
-    azure_deployment_name = "gpt-4o-mini",
+    model = "gpt-4",
     api_key               = os.getenv("AZURE_OPENAI_API_KEY"),   # ← env var, not literal
     temperature           = 0,
 )
