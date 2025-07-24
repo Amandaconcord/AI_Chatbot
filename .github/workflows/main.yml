@@ -9,12 +9,12 @@ on:
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
-    permissions:              # 👈 required for OIDC
+    permissions:     
       id-token: write
       contents: read
 
     env:
-      AZURE_OPENAI_API_KEY: ${{ secrets.AZURE_OPENAI_API_KEY }}
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
 
     steps:
     - uses: actions/checkout@v4
