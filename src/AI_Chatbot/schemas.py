@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field, EmailStr, constr
 from datetime import date
-from typing import Literal
+from typing import Literal, Optional
 
 class Slots(BaseModel):
     """
