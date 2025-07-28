@@ -14,5 +14,5 @@ extract_llm = llm.with_structured_output(Slots)
 
 def extract_node(state: dict) -> dict:
     slots = extract_llm.invoke(state["user_input"])
-    state.setdefault("slots", {}).update(slots.model_dump())
+    state.setdefault("slots", {}).update(slots)
     return state
