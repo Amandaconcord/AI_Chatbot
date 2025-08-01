@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dash Of Cash - Auto Verification Test</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .chat-container {
+            width: 90%;
+            max-width: 800px;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .chat-header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 5px;
+        }
+        
+        .chat-header p {
+            opacity: 0.8;
+            font-size: 0.9rem;
+        }
+        
+        .messages {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f8f9fa;
+        }
+        
+        .message {
+            margin-bottom: 15px;
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .message.bot {
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .message.user {
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+        
+        .bot .message-content {
+            background: white;
+            color: #2c3e50;
+            border: 1px solid #e9ecef;
+            margin-left: 40px;
+            position: relative;
+        }
+        
+        .bot .message-content::before {
+            content: '🤖';
+            position: absolute;
+            left: -35px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+        }
+        
+        .user .message-content {
+            background: #007bff;
+            color: white;
+            margin-right: 40px;
+            position: relative;
+        }
+        
+        .user .message-content::after {
+            content: '👤';
+            position: absolute;
+            right: -35px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1.5rem;
+        }
+        
+        .status-bar {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #e9ecef;
+            font-size: 0.8rem;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .debug-panel {
+            padding: 15px 20px;
+            background: #e3f2fd;
+            border-top: 1px solid #2196f3;
+            border-bottom: 1px solid #2196f3;
+            display: none;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .debug-panel.visible {
+            display: flex;
+        }
+
+        .debug-panel .label {
+            font-weight: bold;
+            color: #1976d2;
+            margin-right: 10px;
+        }
+
+        .debug-btn {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .debug-btn:hover {
+            background: #5a6268;
+            transform: translateY(-1px);
+        }
+
+        .debug-btn.primary {
+            background: #007bff;
+        }
+
+        .debug-btn.primary:hover {
+            background: #0056b3;
+        }
+
+        .debug-btn.success {
+            background: #28a745;
+        }
+
+        .debug-btn.success:hover {
+            background: #1e7e34;
+        }
+
+        .debug-btn.warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .debug-btn.warning:hover {
+            background: #e0a800;
+        }
+        
+        .chat-input {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input input {
+            flex: 1;
+            padding: 12px 18px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        .chat-input input:focus {
+            border-color: #007bff;
+        }
+        
+        .chat-input button {
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .chat-input button:hover {
+            background: #0056b3;
+        }
+        
+        .chat-input button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .debug-info {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 0.85rem;
+            color: #856404;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            padding: 12px 18px;
+            background: white;
+            border-radius: 18px;
+            margin-left: 40px;
+            border: 1px solid #e9ecef;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            margin-left: 10px;
+        }
+        
+        .typing-dots span {
+            width: 8px;
+            height: 8px;
+            background: #007bff;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <h1>🏦 Dash Of Cash</h1>
+            <p>Auto Verification Assistant - Test Interface</p>
+        </div>
+        
+        <div class="messages" id="messages">
+            <!-- Messages will appear here -->
+        </div>
+        
+        <div class="status-bar">
+            <span id="connection-status">🔄 Connecting...</span>
+            <span id="conversation-step">Step: Starting</span>
+            <span id="debug-toggle" style="cursor: pointer; background: #e9ecef; padding: 5px 10px; border-radius: 15px;">🐛 Debug: OFF</span>
+        </div>
+        
+        <div class="debug-panel" id="debug-panel">
+            <span class="label">🔧 Quick Test:</span>
+            <button class="debug-btn primary" onclick="skipToVBT()">Skip to VBT</button>
+            <button class="debug-btn success" onclick="skipToBank()">Skip to Bank</button>
+            <button class="debug-btn warning" onclick="skipToDebit()">Skip to Debit</button>
+            <button class="debug-btn" onclick="resetConversation()">Reset</button>
+            <button class="debug-btn" onclick="testResponses()">Auto Test</button>
+        </div>
+
+        <div class="chat-input">
+            <input type="text" id="user-input" placeholder="Type your response or try: 'skip to vbt'" disabled>
+            <button id="send-btn" onclick="sendMessage()" disabled>Send</button>
+            <button onclick="restartConversation()">🔄 Restart</button>
+        </div>
+    </div>
+
+    <script>
+        let sessionId = null;
+        let isTyping = false;
+        let debugMode = false;
+        
+        const messagesDiv = document.getElementById('messages');
+        const userInput = document.getElementById('user-input');
+        const sendBtn = document.getElementById('send-btn');
+        const connectionStatus = document.getElementById('connection-status');
+        const conversationStep = document.getElementById('conversation-step');
+        const debugToggle = document.getElementById('debug-toggle');
+        
+        // Auto-start conversation when page loads
+        window.onload = () => {
+            startConversation();
+        };
+        
+        // Toggle debug mode
+        debugToggle.onclick = () => {
+            debugMode = !debugMode;
+            debugToggle.textContent = `🐛 Debug: ${debugMode ? 'ON' : 'OFF'}`;
+            debugToggle.style.background = debugMode ? '#28a745' : '#e9ecef';
+            debugToggle.style.color = debugMode ? 'white' : '#6c757d';
+
+            // Show/hide debug panel
+            const debugPanel = document.getElementById('debug-panel');
+            if (debugMode) {
+                debugPanel.classList.add('visible');
+                addSystemMessage('🔧 Debug mode enabled! Use the buttons below or type commands like "skip to vbt"');
+            } else {
+                debugPanel.classList.remove('visible');
+            }
+        };
+        
+        // Enable Enter key to send messages
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendMessage();
+            }
+        });
+        
+        async function startConversation() {
+            try {
+                connectionStatus.textContent = '🔄 Starting conversation...';
+                
+                const response = await fetch('/api/chat/start', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                sessionId = data.session_id;
+                
+                addBotMessage(data.response);
+                
+                connectionStatus.textContent = `✅ Connected (${sessionId.substring(0, 8)}...)`;
+                conversationStep.textContent = `Step: ${data.current_step || 'greeting'}`;
+                
+                // Enable input
+                userInput.disabled = false;
+                sendBtn.disabled = false;
+                userInput.focus();
+                
+            } catch (error) {
+                console.error('Failed to start conversation:', error);
+                connectionStatus.textContent = '❌ Connection failed';
+                addSystemMessage(`Error: ${error.message}. Please check if the backend server is running.`);
+            }
+        }
+        
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message || !sessionId || isTyping) return;
+            
+            // Add user message
+            addUserMessage(message);
+            userInput.value = '';
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                
+                // Remove typing indicator
+                removeTypingIndicator();
+                
+                // Add bot response
+                addBotMessage(data.response);
+                
+                // Update status
+                conversationStep.textContent = `Step: ${data.current_step}`;
+                
+                // Show debug info if enabled
+                if (debugMode) {
+                    addDebugInfo(data);
+                }
+                
+                // Handle special states
+                if (data.escalate) {
+                    connectionStatus.textContent = '⚠️ Escalated to human agent';
+                    userInput.disabled = true;
+                    sendBtn.disabled = true;
+                }
+                
+                if (data.verification_status === 'complete') {
+                    connectionStatus.textContent = '✅ Verification complete!';
+                    addSystemMessage('🎉 Congratulations! Your loan verification is complete.');
+                }
+                
+            } catch (error) {
+                removeTypingIndicator();
+                console.error('Failed to send message:', error);
+                addSystemMessage(`Error: ${error.message}`);
+            }
+        }
+        
+        async function skipToVBT() {
+            if (!sessionId) {
+                await startConversation();
+                await sleep(500);
+            }
+            
+            addSystemMessage('🔧 Skipping to VBT testing...');
+            
+            try {
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: 'skip to vbt'
+                    })
+                });
+                
+                const data = await response.json();
+                addBotMessage(data.response);
+                conversationStep.textContent = `Step: ${data.current_step}`;
+                
+                if (debugMode) {
+                    addDebugInfo(data);
+                }
+            } catch (error) {
+                addSystemMessage(`Error: ${error.message}`);
+            }
+        }
+
+        async function skipToBank() {
+            if (!sessionId) {
+                await startConversation();
+                await sleep(500);
+            }
+            
+            addSystemMessage('🔧 Skipping to Bank Account collection...');
+            
+            try {
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: 'skip to bank'
+                    })
+                });
+                
+                const data = await response.json();
+                addBotMessage(data.response);
+                conversationStep.textContent = `Step: ${data.current_step}`;
+                
+                if (debugMode) {
+                    addDebugInfo(data);
+                }
+            } catch (error) {
+                addSystemMessage(`Error: ${error.message}`);
+            }
+        }
+
+        async function skipToDebit() {
+            if (!sessionId) {
+                await startConversation();
+                await sleep(500);
+            }
+            
+            addSystemMessage('🔧 Skipping to Debit Card collection...');
+            
+            try {
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: 'skip to debit'
+                    })
+                });
+                
+                const data = await response.json();
+                addBotMessage(data.response);
+                conversationStep.textContent = `Step: ${data.current_step}`;
+                
+                if (debugMode) {
+                    addDebugInfo(data);
+                }
+            } catch (error) {
+                addSystemMessage(`Error: ${error.message}`);
+            }
+        }
+
+        async function resetConversation() {
+            addSystemMessage('🔧 Resetting conversation...');
+            
+            try {
+                if (sessionId) {
+                    const response = await fetch('/api/chat/message', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({
+                            session_id: sessionId,
+                            message: 'reset'
+                        })
+                    });
+                    
+                    const data = await response.json();
+                    addBotMessage(data.response);
+                    conversationStep.textContent = `Step: ${data.current_step}`;
+                } else {
+                    restartConversation();
+                }
+            } catch (error) {
+                addSystemMessage(`Error: ${error.message}`);
+            }
+        }
+
+        async function testResponses() {
+            if (!sessionId) {
+                await startConversation();
+                await sleep(1000);
+            }
+            
+            addSystemMessage('🤖 Running automated test sequence: VBT → Yes → Code');
+            
+            const testSequence = [
+                { message: 'skip to vbt', delay: 1000 },
+                { message: 'yes', delay: 2000 },
+                { message: '123456', delay: 1500 },
+            ];
+            
+            for (const test of testSequence) {
+                await sleep(test.delay);
+                await sendTestMessage(test.message);
+            }
+        }
+
+        async function sendTestMessage(message) {
+            addUserMessage(`🤖 Auto: ${message}`);
+            
+            try {
+                const response = await fetch('/api/chat/message', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        session_id: sessionId,
+                        message: message
+                    })
+                });
+                
+                const data = await response.json();
+                addBotMessage(data.response);
+                conversationStep.textContent = `Step: ${data.current_step}`;
+                
+                if (debugMode) {
+                    addDebugInfo(data);
+                }
+            } catch (error) {
+                addSystemMessage(`Error: ${error.message}`);
+            }
+        }
+
+        function addUserMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(message)}</div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function addBotMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message bot';
+            messageDiv.innerHTML = `
+                <div class="message-content">${escapeHtml(message)}</div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function addSystemMessage(message) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <div style="text-align: center; background: #f8f9fa; color: #6c757d; padding: 10px; border-radius: 10px; font-style: italic;">
+                    ${escapeHtml(message)}
+                </div>
+            `;
+            messagesDiv.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function addDebugInfo(data) {
+            const debugDiv = document.createElement('div');
+            debugDiv.className = 'debug-info';
+            debugDiv.innerHTML = `
+                <strong>Debug Info:</strong><br>
+                Current Step: ${data.current_step}<br>
+                Slots Needed: ${JSON.stringify(data.slots_needed || [])}<br>
+                Verification Status: ${data.verification_status || 'none'}<br>
+                Escalate: ${data.escalate || false}
+            `;
+            messagesDiv.appendChild(debugDiv);
+            scrollToBottom();
+        }
+        
+        function showTypingIndicator() {
+            isTyping = true;
+            const typingDiv = document.createElement('div');
+            typingDiv.id = 'typing-indicator';
+            typingDiv.className = 'message bot';
+            typingDiv.innerHTML = `
+                <div class="typing-indicator">
+                    <span>Assistant is typing</span>
+                    <div class="typing-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            `;
+            messagesDiv.appendChild(typingDiv);
+            scrollToBottom();
+        }
+        
+        function removeTypingIndicator() {
+            isTyping = false;
+            const typingDiv = document.getElementById('typing-indicator');
+            if (typingDiv) {
+                typingDiv.remove();
+            }
+        }
+        
+        function restartConversation() {
+            // Clear messages
+            messagesDiv.innerHTML = '';
+            
+            // Reset state
+            sessionId = null;
+            isTyping = false;
+            
+            // Disable input temporarily
+            userInput.disabled = true;
+            sendBtn.disabled = true;
+            userInput.value = '';
+            
+            // Restart
+            startConversation();
+        }
+        
+        function scrollToBottom() {
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        function escapeHtml(unsafe) {
+            return unsafe
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+    </script>
+</body>
+</html>
